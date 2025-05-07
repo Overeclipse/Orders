@@ -1,274 +1,250 @@
-// OrdersTable.jsx - Обновленный компонент таблицы заказов
-import React, { useState } from 'react';
-import { IonIcon } from '@ionic/react';
-import { paperPlaneOutline, documentTextOutline, downloadOutline } from 'ionicons/icons';
-import styles from './Orders.module.css';
+import React, { useState, useEffect } from 'react';
+import { ChevronDown, RotateCcw, Calendar, PlaneTakeoff, Download, FileText } from 'lucide-react';
 
-const OrdersTable = ({
-  orders,
-  selectAll,
-  handleSelectAll,
-  handleOrderSelect,
-  handleStatusUpdate,
-}) => {
-  const [statusDropdowns, setStatusDropdowns] = useState({});
-  const [massStatusDropdownOpen, setMassStatusDropdownOpen] = useState(false);
-  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const toggleStatusDropdown = (id) => {
-    setStatusDropdowns((prev) => {
-      const newState = {};
-      Object.keys(prev).forEach((key) => {
-        newState[key] = false;
-      });
-      newState[id] = !prev[id];
-      return newState;
-    });
-    setMassStatusDropdownOpen(false);
-    setExportDropdownOpen(false);
-  };
-
-  const toggleMassStatusDropdown = () => {
-    setMassStatusDropdownOpen((prev) => !prev);
-    setExportDropdownOpen(false);
-    setStatusDropdowns({});
-  };
-
-  const toggleExportDropdown = () => {
-    setExportDropdownOpen((prev) => !prev);
-    setMassStatusDropdownOpen(false);
-    setStatusDropdowns({});
-  };
-
-  const handleStatusChange = (id, newStatus) => {
-    handleStatusUpdate(id, newStatus);
-    setStatusDropdowns((prev) => ({ ...prev, [id]: false }));
-  };
+const OrdersTable = () => {
+  const [orders, setOrders] = useState([
+    { 
+      id: 1, 
+      date: { time: '16:05', date: '07-05-25' }, 
+      shipDate: '2025-05-06T19:00:00.000Z', 
+      client: 'Xurshid', 
+      quantity: 1, 
+      priceType: 'Наличные', 
+      amount: 1, 
+      status: 'Новый', 
+      agent: 'Fidel', 
+      location: 'Мирабад'
+    },
+    { 
+      id: 2, 
+      date: { time: '16:10', date: '07-05-25' }, 
+      shipDate: '2025-05-07T09:00:00.000Z', 
+      client: 'Ali', 
+      quantity: 2, 
+      priceType: 'Карта', 
+      amount: 50, 
+      status: 'Отгружен', 
+      agent: 'Elena', 
+      location: 'Юнусабад'
+    },
+    { 
+      id: 3, 
+      date: { time: '16:15', date: '07-05-25' }, 
+      shipDate: '2025-05-07T14:00:00.000Z', 
+      client: 'Bakhtiyor', 
+      quantity: 3, 
+      priceType: 'Наличные', 
+      amount: 75, 
+      status: 'Доставлен', 
+      agent: 'Sergey', 
+      location: 'Чиланзар'
+    },
+    { 
+      id: 4, 
+      date: { time: '16:20', date: '07-05-25' }, 
+      shipDate: '2025-05-08T10:00:00.000Z', 
+      client: 'Dilshod', 
+      quantity: 1, 
+      priceType: 'Карта', 
+      amount: 30, 
+      status: 'Возврат', 
+      agent: 'Marina', 
+      location: 'Янгихаёт'
+    },
+    { 
+      id: 5, 
+      date: { time: '16:25', date: '07-05-25' }, 
+      shipDate: '2025-05-07T15:00:00.000Z', 
+      client: 'Zafar', 
+      quantity: 2, 
+      priceType: 'Наличные', 
+      amount: 45, 
+      status: 'Отменен', 
+      agent: 'Oleg', 
+      location: 'Сергели'
+    },
+    { 
+      id: 6, 
+      date: { time: '16:30', date: '07-05-25' }, 
+      shipDate: '2025-05-08T12:00:00.000Z', 
+      client: 'Rustam', 
+      quantity: 1, 
+      priceType: 'Карта', 
+      amount: 20, 
+      status: 'Новый', 
+      agent: 'Irina', 
+      location: 'Учтепи'
+    },
+    { 
+      id: 7, 
+      date: { time: '16:35', date: '07-05-25' }, 
+      shipDate: '2025-05-07T18:00:00.000Z', 
+      client: 'Shokhrukh', 
+      quantity: 3, 
+      priceType: 'Наличные', 
+      amount: 90, 
+      status: 'Отгружен', 
+      agent: 'Dmitry', 
+      location: 'Яшнабад'
+    }
+  ]);
 
   const getStatusButton = (status) => {
-    switch (status) {
-      case 1:
-        return <button className={styles.statusButton + ' ' + styles.statusNew}>Новый</button>;
-      case 2:
-        return <button className={styles.statusButton + ' ' + styles.statusShipped}>Отгружен</button>;
-      case 3:
-        return <button className={styles.statusButton + ' ' + styles.statusDelivered}>Доставлен</button>;
-      case 4:
-        return <button className={styles.statusButton + ' ' + styles.statusReturn}>Возврат</button>;
-      case 5:
-        return <button className={styles.statusButton + ' ' + styles.statusCanceled}>Отменен</button>;
-      default:
-        return <button className={styles.statusButton + ' ' + styles.statusNew}>Новый</button>;
-    }
-  };
-
-  const renderStatusButton = (order) => {
+    const statusStyles = {
+      'Новый': 'bg-blue-400 text-white',
+      'Отгружен': 'bg-yellow-400 text-white',
+      'Доставлен': 'bg-green-500 text-white',
+      'Возврат': 'bg-red-500 text-white',
+      'Отменен': 'bg-gray-500 text-white'
+    };
+    
     return (
-      <div className={styles.dropdown}>
-        {getStatusButton(order.stat)}
-      </div>
+      <button className={`py-1 px-3 rounded ${statusStyles[status] || 'bg-blue-400 text-white'} w-full`}>
+        {status}
+      </button>
     );
   };
 
-  // Фильтрация заказов
-  const filteredOrders = orders.filter(order =>
-    order.client_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.agent?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.area?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  // Пагинация
-  const indexOfLastRow = currentPage * rowsPerPage;
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentOrders = filteredOrders.slice(indexOfFirstRow, indexOfLastRow);
-  const totalPages = Math.ceil(filteredOrders.length / rowsPerPage);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  // Форматирование даты отгрузки
-  const formatShippingDate = (dateString) => {
-    if (!dateString) return '';
-    try {
-      return dateString;
-    } catch (e) {
-      return dateString;
-    }
-  };
-
   return (
-    <div className={styles.tableContainer}>
-      <div className={styles.tableToolbar}>
-        <div className={styles.rowsPerPageContainer}>
-          <span>По</span>
-          <select
-            value={rowsPerPage}
-            onChange={(e) => {
-              setRowsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className={styles.rowsPerPageSelect}
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
+    <div className="bg-white p-4 rounded shadow">
+      <div className="flex items-center mb-4">
+        <button className="bg-green-500 text-white flex items-center py-2 px-4 rounded gap-2">
+          <span>Добавить заказ</span>
+        </button>
+        <button className="bg-yellow-400 text-white flex items-center py-2 px-4 rounded gap-2 ml-auto">
+          <span>Просроченные заказы</span>
+        </button>
+      </div>
+      
+      {/* Filter Section */}
+      <div className="border-t border-b border-gray-200 py-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div className="relative">
+            <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+              <option>Статус</option>
+            </select>
+          </div>
+          <div className="relative">
+            <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+              <option>Тип оплаты</option>
+            </select>
+          </div>
+          <div className="relative">
+            <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+              <option>Агент</option>
+            </select>
+          </div>
+          <div className="relative">
+            <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+              <option>Дата заявки</option>
+            </select>
+          </div>
         </div>
-
-        <div className={styles.searchContainer}>
-          <span>Быстрый поиск:</span>
-          <input
-            type="search"
-            placeholder="Поиск..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className={styles.searchInput}
-          />
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="relative">
+            <button className="w-full bg-blue-400 text-white p-2 rounded flex justify-between items-center">
+              <span className="flex items-center">
+                <Calendar size={16} className="mr-2" />
+                <span>Начало - Конец</span>
+              </span>
+              <ChevronDown size={16} />
+            </button>
+          </div>
+          <div className="relative">
+            <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+              <option>Местность</option>
+            </select>
+          </div>
+          <div className="relative">
+            <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+              <option>Категория клиента</option>
+            </select>
+          </div>
+          <div className="flex items-center justify-between">
+            <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+              <option>Склад</option>
+            </select>
+            <button className="ml-2 bg-blue-400 text-white p-2 rounded w-12 flex justify-center">
+              <RotateCcw size={16} />
+            </button>
+          </div>
         </div>
       </div>
-
-      <div className={styles.tableWrapper}>
-        <table className={styles.ordersTable}>
+      
+      {/* Table Tools */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center">
+          <span className="mr-2">По</span>
+          <select className="border border-gray-300 rounded p-1 mr-2">
+            <option>50</option>
+            <option>25</option>
+            <option>10</option>
+          </select>
+        </div>
+        <div className="flex items-center">
+          <label className="mr-2">Быстрый поиск:</label>
+          <input type="text" className="border border-gray-300 rounded p-1 w-64" />
+        </div>
+      </div>
+      
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className={styles.checkboxHeader}>
-                <input
-                  type="checkbox"
-                  id="order-select-all"
-                  checked={selectAll}
-                  onChange={handleSelectAll}
-                />
+              <th className="bg-blue-400 text-white p-2 border border-blue-500 text-center w-12">
+                <input type="checkbox" />
               </th>
-              <th className={styles.numberHeader}>№</th>
-              <th className={styles.dateHeader}>Дата заявки</th>
-              <th className={styles.shippingDateHeader}>Дата отгрузки</th>
-              <th className={styles.clientHeader}>Клиент</th>
-              <th className={styles.quantityHeader}>Кол-во</th>
-              <th className={styles.priceTypeHeader}>Тип цены</th>
-              <th className={styles.amountHeader}>Сумма</th>
-              <th className={styles.statusHeader}>Статус</th>
-              <th className={styles.agentHeader}>Агент</th>
-              <th className={styles.areaHeader}>Местность</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500 text-center">№</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500">Дата заявки</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500">Дата отгрузки</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500">Клиент</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500 text-center">Кол-во</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500">Тип цены</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500 text-right">Сумма</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500">Статус</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500">Агент</th>
+              <th className="bg-blue-400 text-white p-2 border border-blue-500">Местность</th>
             </tr>
           </thead>
           <tbody>
-            {currentOrders.map((order) => (
-              <tr key={order.id_order} className={styles.orderRow}>
-                <td className={styles.checkboxCell}>
-                  <input
-                    type="checkbox"
-                    checked={order.selected || false}
-                    onChange={() => handleOrderSelect(order.id_order)}
-                  />
+            {orders.map((order) => (
+              <tr key={order.id} className="hover:bg-gray-100">
+                <td className="border border-gray-300 p-2 text-center">
+                  <input type="checkbox" />
                 </td>
-                <td className={styles.numberCell}>{order.id_order}</td>
-                <td className={styles.dateCell}>
-                  {order.start_time}<br/>{order.start}
+                <td className="border border-gray-300 p-2 text-center">{order.id}</td>
+                <td className="border border-gray-300 p-2 whitespace-nowrap">
+                  {order.date.time}<br/>{order.date.date}
                 </td>
-                <td className={styles.shippingDateCell}>{formatShippingDate(order.end)}</td>
-                <td className={styles.clientCell}>{order.client_name}</td>
-                <td className={styles.quantityCell}>{order.count}</td>
-                <td className={styles.priceTypeCell}>{order.price_type}</td>
-                <td className={styles.amountCell}>{order.amount}</td>
-                <td className={styles.statusCell}>{renderStatusButton(order)}</td>
-                <td className={styles.agentCell}>{order.agent}</td>
-                <td className={styles.areaCell}>{order.area}</td>
+                <td className="border border-gray-300 p-2 whitespace-nowrap">{order.shipDate}</td>
+                <td className="border border-gray-300 p-2">{order.client}</td>
+                <td className="border border-gray-300 p-2 text-center">{order.quantity}</td>
+                <td className="border border-gray-300 p-2">{order.priceType}</td>
+                <td className="border border-gray-300 p-2 text-right">{order.amount}</td>
+                <td className="border border-gray-300 p-2">
+                  {getStatusButton(order.status)}
+                </td>
+                <td className="border border-gray-300 p-2">{order.agent}</td>
+                <td className="border border-gray-300 p-2">{order.location}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Пагинация */}
-      {totalPages > 1 && (
-        <div className={styles.pagination}>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={currentPage === page ? styles.activePageButton : styles.pageButton}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div className={styles.actionButtons}>
-        <div className={styles.dropdown}>
-          <button
-            className={`${styles.button} ${styles.buttonSuccess}`}
-            onClick={toggleMassStatusDropdown}
-          >
-            <IonIcon icon={paperPlaneOutline} /> Изменить статус
-          </button>
-          {massStatusDropdownOpen && (
-            <ul className={styles.dropdownMenu}>
-              <li>
-                <a className={`${styles.dropdownItem} ${styles.buttonWarning}`} href="#">
-                  <IonIcon icon="airplane-departure" /> Отгружен
-                </a>
-              </li>
-              <li>
-                <a className={`${styles.dropdownItem} ${styles.buttonSuccess}`} href="#">
-                  <IonIcon icon="airplane-check" /> Доставлен
-                </a>
-              </li>
-              <li>
-                <a className={`${styles.dropdownItem} ${styles.buttonDanger}`} href="#">
-                  <IonIcon icon="airplane-arrival" /> Возврат
-                </a>
-              </li>
-              <li>
-                <a className={`${styles.dropdownItem} ${styles.buttonSecondary}`} href="#">
-                  <IonIcon icon="airplane-slash" /> Отменен
-                </a>
-              </li>
-              <li>
-                <a className={`${styles.dropdownItem} ${styles.buttonInfo}`} href="#">
-                  <IonIcon icon="airplane" /> Восстановить
-                </a>
-              </li>
-            </ul>
-          )}
-        </div>
-        <span className={`${styles.button} ${styles.buttonInfo} ${styles.orderZagruz}`}>
-          Загруз <IonIcon icon={documentTextOutline} />
-        </span>
-        <div className={styles.dropdown}>
-          <button
-            className={`${styles.button} ${styles.buttonInfo}`}
-            onClick={toggleExportDropdown}
-          >
-            Экспорт в 1С <IonIcon icon={downloadOutline} />
-          </button>
-          {exportDropdownOpen && (
-            <ul className={styles.dropdownMenu}>
-              <li>
-                <button className={`${styles.button} ${styles.buttonInfo}`} value="XML2">
-                  Загруз XML 2.0 <IonIcon icon="download" />
-                </button>
-              </li>
-              <li>
-                <button className={`${styles.button} ${styles.buttonInfo}`} value="CSV">
-                  Загруз CSV 1.0 <IonIcon icon="download" />
-                </button>
-              </li>
-              <li>
-                <button className={`${styles.button} ${styles.buttonInfo}`} value="EXCEL1C1">
-                  Загруз EXCEL 1.0 <IonIcon icon="download" />
-                </button>
-              </li>
-            </ul>
-          )}
-        </div>
+      {/* Action Buttons */}
+      <div className="flex mt-4 gap-2">
+        <button className="bg-green-500 text-white py-2 px-4 rounded flex gap-2 items-center">
+          <PlaneTakeoff size={16} /> Изменить статус
+        </button>
+        <button className="bg-blue-400 text-white py-2 px-4 rounded flex gap-2 items-center">
+          Загруз <FileText size={16} />
+        </button>
+        <button className="bg-blue-400 text-white py-2 px-4 rounded flex gap-2 items-center">
+          Экспорт в 1С <Download size={16} />
+        </button>
       </div>
     </div>
   );
