@@ -1,83 +1,10 @@
-// OrderSearchBar.jsx - Компонент для строки фильтров с кастомным datepicker
 import React, { useState } from 'react';
-import Select from 'react-select';
-import { IonIcon } from '@ionic/react';
-import { calendarOutline, chevronDownOutline, refreshOutline } from 'ionicons/icons';
-import styles from './Orders.module.css';
+import { Calendar, ChevronDown, RotateCcw } from 'lucide-react';
 
-const OrderSearchBar = ({
-  statuses,
-  priceTypes,
-  agents,
-  areas,
-  clientCategories,
-  warehouses,
-  statusFilter,
-  priceTypeFilter,
-  agentFilter,
-  byDateFilter,
-  areaFilter,
-  clientCategoryFilter,
-  warehouseFilter,
-  dateRange,
-  handleStatusChange,
-  handlePriceTypeChange,
-  handleAgentChange,
-  handleByDateChange,
-  handleAreaChange,
-  handleClientCategoryChange,
-  handleWarehouseChange,
-  handleDateRangeChange,
-  handleRefresh,
-}) => {
+const OrderSearchBar = () => {
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [tempDateRange, setTempDateRange] = useState({ start: dateRange.start, end: dateRange.end });
-
-  const formatOptions = (items) =>
-    items.map(item => ({ value: item.id, label: item.name }));
-
-  const statusOptions = formatOptions(statuses);
-  const priceTypeOptions = formatOptions(priceTypes);
-  const agentOptions = formatOptions(agents);
-  const areaOptions = formatOptions(areas);
-  const clientCategoryOptions = formatOptions(clientCategories);
-  const warehouseOptions = formatOptions(warehouses);
-  const byDateOptions = [
-    { value: 'start_date', label: 'Дата заявки' },
-    { value: 'end_date', label: 'Дата отгрузки' },
-  ];
-
-  const handleSelectChange = (selected, action) => {
-    const handlerMap = {
-      status: handleStatusChange,
-      price_type: handlePriceTypeChange,
-      agent: handleAgentChange,
-      area: handleAreaChange,
-      client_category: handleClientCategoryChange,
-      warehouse: handleWarehouseChange,
-      bydate: handleByDateChange,
-    };
-    const handler = handlerMap[action.name];
-    if (handler) {
-      if (action.name === 'bydate') {
-        const value = selected ? selected.value : '';
-        handler(value);
-      } else {
-        const values = selected ? selected.map(s => s.value) : [];
-        handler(values);
-      }
-    }
-  };
-
-  const handleDateApply = () => {
-    handleDateRangeChange(tempDateRange.start, tempDateRange.end);
-    setIsDatePickerOpen(false);
-  };
-
-  const handleDateCancel = () => {
-    setTempDateRange({ start: dateRange.start, end: dateRange.end });
-    setIsDatePickerOpen(false);
-  };
+  const [tempDateRange, setTempDateRange] = useState({ start: '', end: '' });
 
   const handleDateChange = (field) => (e) => {
     setTempDateRange(prev => ({
@@ -86,150 +13,142 @@ const OrderSearchBar = ({
     }));
   };
 
+  const handleDateApply = () => {
+    setDateRange(tempDateRange);
+    setIsDatePickerOpen(false);
+  };
+
+  const handleDateCancel = () => {
+    setTempDateRange({ start: dateRange.start, end: dateRange.end });
+    setIsDatePickerOpen(false);
+  };
+
   return (
-    <div className={styles.innerContainer}>
-      <form id="select">
-        <div className={`${styles.filtr} ${styles.row}`}>
-          <div className={styles.filterGroup}>
-            <div className={styles.filterItem}>
-              <Select
-                id="status"
-                name="status"
-                options={statusOptions}
-                isMulti
-                value={statusOptions.filter(option => statusFilter.includes(option.value))}
-                onChange={(selected) => handleSelectChange(selected, { name: 'status' })}
-                className={styles.selectpicker}
-                classNamePrefix="react-select"
-                placeholder="Статус"
-              />
-            </div>
-            <div className={styles.filterItem}>
-              <Select
-                id="price_type"
-                name="price_type"
-                options={priceTypeOptions}
-                isMulti
-                value={priceTypeOptions.filter(option => priceTypeFilter.includes(option.value))}
-                onChange={(selected) => handleSelectChange(selected, { name: 'price_type' })}
-                className={styles.selectpicker}
-                classNamePrefix="react-select"
-                placeholder="Тип оплаты"
-              />
-            </div>
-            <div className={styles.filterItem}>
-              <Select
-                id="agent"
-                name="agent"
-                options={agentOptions}
-                isMulti
-                value={agentOptions.filter(option => agentFilter.includes(option.value))}
-                onChange={(selected) => handleSelectChange(selected, { name: 'agent' })}
-                className={styles.selectpicker}
-                classNamePrefix="react-select"
-                placeholder="Агент"
-              />
-            </div>
-            <div className={styles.filterItem}>
-              <Select
-                id="bydate"
-                name="bydate"
-                options={byDateOptions}
-                value={byDateOptions.find(option => option.value === byDateFilter)}
-                onChange={(selected) => handleSelectChange(selected, { name: 'bydate' })}
-                className={styles.selectpicker}
-                classNamePrefix="react-select"
-                placeholder="Выберите дату"
-              />
-            </div>
-            <div className={styles.filterItem}>
-              <button
-                type="button"
-                className={`${styles.button} ${styles.buttonInfo} ${styles.reportrangeOrder}`}
-                onClick={() => setIsDatePickerOpen(true)}
-              >
-                <IonIcon icon={calendarOutline} />{' '}
-                <span>{dateRange.start || 'Начало'} - {dateRange.end || 'Конец'}</span>{' '}
-                <IonIcon icon={chevronDownOutline} />
-              </button>
-              {isDatePickerOpen && (
-                <div className={styles.datePickerModal}>
-                  <div className={styles.datePickerContent}>
-                    <label>
-                      Начало:
-                      <input
-                        type="date"
-                        value={tempDateRange.start || ''}
-                        onChange={handleDateChange('start')}
-                      />
-                    </label>
-                    <label>
-                      Конец:
-                      <input
-                        type="date"
-                        value={tempDateRange.end || ''}
-                        onChange={handleDateChange('end')}
-                      />
-                    </label>
-                    <div className={styles.datePickerButtons}>
-                      <button type="button" onClick={handleDateApply}>Применить</button>
-                      <button type="button" onClick={handleDateCancel}>Отмена</button>
-                    </div>
+    <div className="border-t border-b border-gray-200 py-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <div className="relative">
+          <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+            <option>Статус</option>
+            <option>Новый</option>
+            <option>Отгружен</option>
+            <option>Доставлен</option>
+            <option>Возврат</option>
+            <option>Отменен</option>
+          </select>
+        </div>
+        <div className="relative">
+          <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+            <option>Тип оплаты</option>
+            <option>Наличные</option>
+            <option>Карта</option>
+          </select>
+        </div>
+        <div className="relative">
+          <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+            <option>Агент</option>
+            <option>Fidel</option>
+            <option>Elena</option>
+            <option>Sergey</option>
+            <option>Marina</option>
+            <option>Oleg</option>
+            <option>Irina</option>
+            <option>Dmitry</option>
+          </select>
+        </div>
+        <div className="relative">
+          <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+            <option>Дата заявки</option>
+            <option>Дата отгрузки</option>
+          </select>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="relative">
+          <button 
+            className="w-full bg-blue-400 text-white p-2 rounded flex justify-between items-center"
+            onClick={() => setIsDatePickerOpen(true)}
+          >
+            <span className="flex items-center">
+              <Calendar size={16} className="mr-2" />
+              <span>{dateRange.start || 'Начало'} - {dateRange.end || 'Конец'}</span>
+            </span>
+            <ChevronDown size={16} />
+          </button>
+          
+          {isDatePickerOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-4 rounded shadow-lg w-80">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block mb-1">Начало:</label>
+                    <input
+                      type="date"
+                      className="w-full p-2 border border-gray-300 rounded"
+                      value={tempDateRange.start || ''}
+                      onChange={handleDateChange('start')}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1">Конец:</label>
+                    <input
+                      type="date"
+                      className="w-full p-2 border border-gray-300 rounded"
+                      value={tempDateRange.end || ''}
+                      onChange={handleDateChange('end')}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button 
+                      className="px-4 py-2 bg-gray-200 rounded"
+                      onClick={handleDateCancel}
+                    >
+                      Отмена
+                    </button>
+                    <button 
+                      className="px-4 py-2 bg-blue-500 text-white rounded"
+                      onClick={handleDateApply}
+                    >
+                      Применить
+                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-          <div className={styles.filterGroup}>
-            <div className={styles.filterItem}>
-              <Select
-                id="area"
-                name="area"
-                options={areaOptions}
-                isMulti
-                value={areaOptions.filter(option => areaFilter.includes(option.value))}
-                onChange={(selected) => handleSelectChange(selected, { name: 'area' })}
-                className={styles.selectpicker}
-                classNamePrefix="react-select"
-                placeholder="Местность"
-              />
-            </div>
-            <div className={styles.filterItem}>
-              <Select
-                id="client_category"
-                name="client_category"
-                options={clientCategoryOptions}
-                isMulti
-                value={clientCategoryOptions.filter(option => clientCategoryFilter.includes(option.value))}
-                onChange={(selected) => handleSelectChange(selected, { name: 'client_category' })}
-                className={styles.selectpicker}
-                classNamePrefix="react-select"
-                placeholder="Категория клиента"
-              />
-            </div>
-            <div className={styles.filterItem}>
-              <Select
-                id="warehouse"
-                name="warehouse"
-                options={warehouseOptions}
-                isMulti
-                value={warehouseOptions.filter(option => warehouseFilter.includes(option.value))}
-                onChange={(selected) => handleSelectChange(selected, { name: 'warehouse' })}
-                className={styles.selectpicker}
-                classNamePrefix="react-select"
-                placeholder="Склад"
-              />
-            </div>
-            <div className={styles.filterItem}>
-              <div id="la-buttons">
-                <a className={`${styles.button} ${styles.buttonInfo} ${styles.pullRight}`} onClick={handleRefresh}>
-                  <IonIcon icon={refreshOutline} />
-                </a>
               </div>
             </div>
-          </div>
+          )}
         </div>
-      </form>
+        
+        <div className="relative">
+          <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+            <option>Местность</option>
+            <option>Мирабад</option>
+            <option>Юнусабад</option>
+            <option>Чиланзар</option>
+            <option>Янгихаёт</option>
+            <option>Сергели</option>
+            <option>Учтепи</option>
+            <option>Яшнабад</option>
+          </select>
+        </div>
+        
+        <div className="relative">
+          <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+            <option>Категория клиента</option>
+            <option>Оптовый</option>
+            <option>Розничный</option>
+          </select>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <select className="w-full p-2 border border-gray-300 rounded appearance-none">
+            <option>Склад</option>
+            <option>Центральный склад</option>
+          </select>
+          <button className="ml-2 bg-blue-400 text-white p-2 rounded w-12 flex justify-center">
+            <RotateCcw size={16} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
